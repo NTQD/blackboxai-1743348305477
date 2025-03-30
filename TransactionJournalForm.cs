@@ -1,42 +1,47 @@
 using System;
-using System.Data;
 using System.Windows.Forms;
+using System.Data;
+using FinanceApp.Helpers;
 
-public partial class TransactionJournalForm : Form
+namespace FinanceApp
 {
-    public TransactionJournalForm()
+    public partial class TransactionJournalForm : Form
     {
-        InitializeComponent();
-        LoadTransactions();
-    }
+        public TransactionJournalForm()
+        {
+            InitializeComponent();
+            dtpStartDate.Value = DateTime.Now.AddMonths(-1);
+            dtpEndDate.Value = DateTime.Now;
+            LoadTransactions();
+        }
 
-    private void LoadTransactions()
-    {
-        var transactions = DatabaseHelper.GetTransactionsByUser(CurrentUser.UserId);
-        dgvTransactions.DataSource = transactions;
-        FormatDataGridView();
-    }
+        private void LoadTransactions()
+        {
+            try
+            {
+                // Load transactions between selected dates
+                DataTable transactions = ReportHelper.GetTransactionsByDateRange(
+                    CurrentUser.UserId,
+                    dtpStartDate.Value,
+                    dtpEndDate.Value);
+                    
+                dgvTransactions.DataSource = transactions;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading transactions: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
 
-    private void FormatDataGridView()
-    {
-        dgvTransactions.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-        dgvTransactions.Columns["Amount"].DefaultCellStyle.Format = "N0";
-        dgvTransactions.Columns["TransactionDate"].DefaultCellStyle.Format = "dd/MM/yyyy";
-    }
+        private void btnRefresh_Click(object sender, EventArgs e)
+        {
+            LoadTransactions();
+        }
 
-    private void btnFilter_Click(object sender, EventArgs e)
-    {
-        DateTime startDate = dtpStartDate.Value;
-        DateTime endDate = dtpEndDate.Value;
-
-        var filteredTransactions = DatabaseHelper.GetTransactionsByUser(
-            CurrentUser.UserId, startDate, endDate);
-        dgvTransactions.DataSource = filteredTransactions;
-    }
-
-    private void btnReport_Click(object sender, EventArgs e)
-    {
-        var reportForm = new ReportForm(dtpStartDate.Value, dtpEndDate.Value);
-        reportForm.ShowDialog();
+        private void btnClose_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
     }
 }
