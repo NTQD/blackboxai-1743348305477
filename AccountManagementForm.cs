@@ -1,71 +1,54 @@
 using System;
 using System.Windows.Forms;
+using FinanceApp.Models;
 
-public partial class AccountManagementForm : Form
+namespace FinanceApp
 {
-    public AccountManagementForm()
+    public partial class AccountManagementForm : Form
     {
-        InitializeComponent();
-        LoadUserInfo();
-    }
-
-    private void LoadUserInfo()
-    {
-        txtUsername.Text = CurrentUser.Username;
-        txtEmail.Text = CurrentUser.Email;
-        txtFullName.Text = CurrentUser.FullName;
-    }
-
-    private void btnSave_Click(object sender, EventArgs e)
-    {
-        if (!ValidateInputs())
-            return;
-
-        try
+        public AccountManagementForm()
         {
-            CurrentUser.Email = txtEmail.Text;
-            CurrentUser.FullName = txtFullName.Text;
-            
-            if (DatabaseHelper.UpdateUserInfo(CurrentUser.UserId, 
-                CurrentUser.Email, CurrentUser.FullName))
+            InitializeComponent();
+            LoadUserData();
+        }
+
+        private void LoadUserData()
+        {
+            var user = Helpers.DatabaseHelperExtensions.GetUser(CurrentUser.UserId);
+            if (user != null)
             {
-                MessageBox.Show("Cập nhật thông tin thành công", 
-                    "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                txtUsername.Text = user.Username;
+                txtEmail.Text = user.Email;
+                txtFullName.Text = user.FullName;
             }
         }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Lỗi khi cập nhật thông tin: {ex.Message}", 
-                "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-    }
 
-    private void btnChangePassword_Click(object sender, EventArgs e)
-    {
-        var changePassForm = new ChangePasswordForm();
-        if (changePassForm.ShowDialog() == DialogResult.OK)
+        private void btnSave_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Đổi mật khẩu thành công", 
-                "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-    }
-
-    private bool ValidateInputs()
-    {
-        if (string.IsNullOrWhiteSpace(txtEmail.Text))
-        {
-            MessageBox.Show("Vui lòng nhập email", 
-                "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return false;
+            try
+            {
+                if (Helpers.DatabaseHelperExtensions.UpdateUserProfile(
+                    CurrentUser.UserId,
+                    txtEmail.Text,
+                    txtFullName.Text))
+                {
+                    MessageBox.Show("Cập nhật thông tin thành công!", "Thành công",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi cập nhật: {ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
-        if (string.IsNullOrWhiteSpace(txtFullName.Text))
+        private void btnCancel_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Vui lòng nhập họ tên", 
-                "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return false;
+            this.DialogResult = DialogResult.Cancel;
+            this.Close();
         }
-
-        return true;
     }
 }
