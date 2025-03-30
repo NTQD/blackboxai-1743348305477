@@ -1,40 +1,49 @@
 using System;
 using System.Windows.Forms;
 
-public partial class RegistrationForm : Form
+namespace FinanceApp
 {
-    public RegistrationForm()
+    public partial class RegistrationForm : Form
     {
-        InitializeComponent();
-    }
-
-    private void btnRegister_Click(object sender, EventArgs e)
-    {
-        string username = txtUsername.Text.Trim();
-        string password = txtPassword.Text;
-        string confirmPassword = txtConfirmPassword.Text;
-        string email = txtEmail.Text.Trim();
-        string fullName = txtFullName.Text.Trim();
-
-        if (password != confirmPassword)
+        public RegistrationForm()
         {
-            MessageBox.Show("Mật khẩu xác nhận không khớp", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
+            InitializeComponent();
         }
 
-        if (DatabaseHelper.RegisterUser(username, password, email, fullName))
+        private void btnRegister_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Đăng ký thành công! Vui lòng đăng nhập.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            try
+            {
+                if (txtPassword.Text != txtConfirmPassword.Text)
+                {
+                    MessageBox.Show("Mật khẩu và xác nhận mật khẩu không khớp!", "Lỗi",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                if (Helpers.DatabaseHelperExtensions.RegisterUser(
+                    txtUsername.Text,
+                    txtPassword.Text,
+                    txtEmail.Text,
+                    txtFullName.Text))
+                {
+                    MessageBox.Show("Đăng ký thành công!", "Thành công",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi đăng ký: {ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
-        else
-        {
-            MessageBox.Show("Đăng ký không thành công. Tên đăng nhập hoặc email có thể đã tồn tại.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-    }
-
-    private void lnkLogin_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-    {
-        this.Close();
     }
 }
