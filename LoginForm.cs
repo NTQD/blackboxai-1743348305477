@@ -1,44 +1,49 @@
 using System;
 using System.Windows.Forms;
 
-public partial class LoginForm : Form
+namespace FinanceApp
 {
-    public LoginForm()
+    public partial class LoginForm : Form
     {
-        InitializeComponent();
-    }
-
-    private void btnLogin_Click(object sender, EventArgs e)
-    {
-        string username = txtUsername.Text.Trim();
-        string password = txtPassword.Text;
-
-        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+        public LoginForm()
         {
-            MessageBox.Show("Vui lòng nhập tên đăng nhập và mật khẩu", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
+            InitializeComponent();
         }
 
-        int? userId = DatabaseHelper.AuthenticateUser(username, password);
-        if (userId.HasValue)
+        private void btnLogin_Click(object sender, EventArgs e)
         {
-            CurrentUser.UserId = userId.Value;
-            CurrentUser.Username = username;
-            
-            this.Hide();
-            var mainForm = new MainForm();
-            mainForm.Show();
-        }
-        else
-        {
-            MessageBox.Show("Tên đăng nhập hoặc mật khẩu không đúng", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-    }
+            if (string.IsNullOrWhiteSpace(txtUsername.Text) || 
+                string.IsNullOrWhiteSpace(txtPassword.Text))
+            {
+                MessageBox.Show("Vui lòng nhập tên đăng nhập và mật khẩu", 
+                    "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
-    private void lnkRegister_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-    {
-        this.Hide();
-        var registerForm = new RegistrationForm();
-        registerForm.Show();
+            try
+            {
+                if (Helpers.DatabaseHelperExtensions.ValidateUser(txtUsername.Text, txtPassword.Text))
+                {
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                }
+                else
+                {
+                    MessageBox.Show("Tên đăng nhập hoặc mật khẩu không đúng", 
+                        "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi đăng nhập: {ex.Message}", 
+                    "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.Cancel;
+            this.Close();
+        }
     }
 }
